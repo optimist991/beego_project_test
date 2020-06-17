@@ -1,3 +1,5 @@
 /vendor/
 /.idea/.gitignore
-/applications/
+applications/
+!applications/.gitundelete
+

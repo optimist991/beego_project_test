@@ -6,13 +6,16 @@ import (
 	"errors"
 	"strconv"
 	"strings"
-
-	"github.com/astaxie/beego"
 )
 
 // CommentsController operations for Comments
 type CommentsController struct {
-	beego.Controller
+	BaseController
+}
+
+type CommentData struct {
+	AimID int    `json:"aim_id"`
+	Body  string `json:"body"`
 }
 
 // URLMapping ...
@@ -33,8 +36,21 @@ func (c *CommentsController) URLMapping() {
 // @router / [post]
 func (c *CommentsController) Post() {
 	var v models.Comments
-	if err := json.Unmarshal(c.Ctx.Input.RequestBody, &v); err == nil {
-		if _, err := models.AddComments(&v); err == nil {
+	var err error
+	var aim *models.Aims
+	if err = json.Unmarshal(c.Ctx.Input.RequestBody, &v); err == nil {
+
+		if aim, err = models.GetAimsById(v.Aim.Id); err != nil {
+			c.Response(400, nil, errors.New("No such Aim"))
+		}
+
+		applic := &models.Comments{
+
+			Aim:  aim,
+			Body: v.Body,
+		}
+
+		if _, err := models.AddComments(applic); err == nil {
 			c.Ctx.Output.SetStatus(201)
 			c.Data["json"] = v
 		} else {

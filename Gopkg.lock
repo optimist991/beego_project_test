@@ -32,6 +32,14 @@
   version = "v1.12.1"
 
 [[projects]]
+  digest = "1:ad92aa49f34cbc3546063c7eb2cabb55ee2278b72842eda80e2a20a8a06a8d73"
+  name = "github.com/google/uuid"
+  packages = ["."]
+  pruneopts = ""
+  revision = "0cd6bf5da1e1c83f8b45653022c74f71af0538a4"
+  version = "v1.1.1"
+
+[[projects]]
   branch = "master"
   digest = "1:9e073a7d4cd77a697a86d38725a12a84782df2208373916e1eeb11337e2d0fc4"
   name = "github.com/gopherjs/gopherjs"
@@ -143,6 +151,17 @@
   version = "v4.20"
 
 [[projects]]
+  digest = "1:a9554efb4c5688083ede9e3df301f2aac7575d48d0fe4d7df5734c9534d73600"
+  name = "github.com/labstack/gommon"
+  packages = [
+    "color",
+    "log",
+  ]
+  pruneopts = ""
+  revision = "4919956f6fb227b548f004da27c7c6b20fba499f"
+  version = "v0.3.0"
+
+[[projects]]
   digest = "1:729a7852999a4f71cc2850d0d7b20f66b270b1beb7c377320f1bca0061b47d8b"
   name = "github.com/lib/pq"
   packages = [
@@ -153,6 +172,22 @@
   pruneopts = ""
   revision = "d408f9c9485706b60bb2b9b9718f3c54f077b506"
   version = "v1.6.0"
+
+[[projects]]
+  digest = "1:eab986cd0513d271bb1fd9c9d12acd7eb4cfd57cb604122c65bd0914e4637619"
+  name = "github.com/mattn/go-colorable"
+  packages = ["."]
+  pruneopts = ""
+  revision = "68e95eba382c972aafde02ead2cd2426a8a92480"
+  version = "v0.1.6"
+
+[[projects]]
+  digest = "1:87fecb4f5564bd9bc810e4c83d4ac434fd17599edc7b35e27580c2cfc48cdb7c"
+  name = "github.com/mattn/go-isatty"
+  packages = ["."]
+  pruneopts = ""
+  revision = "7b513a986450394f7bbf1476909911b3aa3a55ce"
+  version = "v0.0.12"
 
 [[projects]]
   branch = "master"
@@ -188,6 +223,22 @@
   version = "v1.6.4"
 
 [[projects]]
+  digest = "1:857a9ecd5cb13379ecc8f798f6e6b6b574c98b9355657d91e068275f1120aaf7"
+  name = "github.com/valyala/bytebufferpool"
+  packages = ["."]
+  pruneopts = ""
+  revision = "e746df99fe4a3986f4d4f79e13c1e0117ce9c2f7"
+  version = "v1.0.0"
+
+[[projects]]
+  digest = "1:c8b536f08002f0916e288eb66b7d961e3a854542f50532255a7c737edd22987a"
+  name = "github.com/valyala/fasttemplate"
+  packages = ["."]
+  pruneopts = ""
+  revision = "8fcc7a99b5795b7c3e95172237cf93282fc339a9"
+  version = "v1.1.0"
+
+[[projects]]
   branch = "master"
   digest = "1:9c2bc2263b3c81abf8ae29258c5bafca98fad85fc89a564f1a38591dd78940da"
   name = "golang.org/x/crypto"
@@ -210,6 +261,17 @@
   ]
   pruneopts = ""
   revision = "627f9648deb96c27737b83199d44bb5c1010cbcf"
+
+[[projects]]
+  branch = "master"
+  digest = "1:2f13557a4f38b156fad66bda9a10ef513935b8f94d1a2830548d671c40cb6c3e"
+  name = "golang.org/x/sys"
+  packages = [
+    "internal/unsafeheader",
+    "unix",
+  ]
+  pruneopts = ""
+  revision = "f1bc736245b146b19d485cdbc534f9a765257080"
 
 [[projects]]
   digest = "1:740b51a55815493a8d0f2b1e0d0ae48fe48953bf7eaf3fcc4198823bf67768c0"
@@ -250,7 +312,10 @@
   input-imports = [
     "github.com/astaxie/beego",
     "github.com/astaxie/beego/context/param",
+    "github.com/astaxie/beego/logs",
     "github.com/astaxie/beego/orm",
+    "github.com/google/uuid",
+    "github.com/labstack/gommon/log",
     "github.com/lib/pq",
     "github.com/smartystreets/goconvey/convey",
   ]

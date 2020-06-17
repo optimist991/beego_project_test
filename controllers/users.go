@@ -6,13 +6,19 @@ import (
 	"errors"
 	"strconv"
 	"strings"
-
-	"github.com/astaxie/beego"
 )
 
 // UsersController operations for Users
 type UsersController struct {
-	beego.Controller
+	BaseController
+}
+
+type UserData struct {
+	CompanyID int    `json:"company_id"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Location  string `json:"location"`
+	Email     string `json:"email"`
 }
 
 // URLMapping ...
@@ -31,10 +37,25 @@ func (c *UsersController) URLMapping() {
 // @Success 201 {int} models.Users
 // @Failure 403 body is empty
 // @router / [post]
+
 func (c *UsersController) Post() {
-	var v models.Users
-	if err := json.Unmarshal(c.Ctx.Input.RequestBody, &v); err == nil {
-		if _, err := models.AddUsers(&v); err == nil {
+	var v UserData
+	var err error
+	var comp *models.Companies
+
+	if err = json.Unmarshal(c.Ctx.Input.RequestBody, &v); err == nil {
+
+		if comp, err = models.GetCompaniesById(v.CompanyID); err != nil {
+			c.Response(400, nil, errors.New("No such company"))
+		}
+		user := &models.Users{
+			Company:   comp,
+			FirstName: v.FirstName,
+			LastName:  v.LastName,
+			Location:  v.Location,
+			Email:     v.Email,
+		}
+		if _, err := models.AddUsers(user); err == nil {
 			c.Ctx.Output.SetStatus(201)
 			c.Data["json"] = v
 		} else {
@@ -43,6 +64,7 @@ func (c *UsersController) Post() {
 	} else {
 		c.Data["json"] = err.Error()
 	}
+
 	c.ServeJSON()
 }
 

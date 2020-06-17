@@ -6,13 +6,11 @@ import (
 	"errors"
 	"strconv"
 	"strings"
-
-	"github.com/astaxie/beego"
 )
 
 // AimsController operations for Aims
 type AimsController struct {
-	beego.Controller
+	BaseController
 }
 
 // URLMapping ...

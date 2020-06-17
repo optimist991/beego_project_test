@@ -4,15 +4,27 @@ import (
 	"beego_project_test/models"
 	"encoding/json"
 	"errors"
+	"io/ioutil"
+	"os"
 	"strconv"
 	"strings"
 
-	"github.com/astaxie/beego"
+	"github.com/google/uuid"
+	"github.com/labstack/gommon/log"
 )
+
+const applicationsPath = "static/applications/"
 
 // ApplicationsController operations for Applications
 type ApplicationsController struct {
-	beego.Controller
+	BaseController
+}
+
+type ApplicationData struct {
+	AimID       int    `json:"aim_id"`
+	FileName    string `json:"file_name"`
+	File        []byte `json:"file"`
+	Description string `json:"description"`
 }
 
 // URLMapping ...
@@ -32,18 +44,48 @@ func (c *ApplicationsController) URLMapping() {
 // @Failure 403 body is empty
 // @router / [post]
 func (c *ApplicationsController) Post() {
-	var v models.Applications
-	if err := json.Unmarshal(c.Ctx.Input.RequestBody, &v); err == nil {
-		if _, err := models.AddApplications(&v); err == nil {
-			c.Ctx.Output.SetStatus(201)
-			c.Data["json"] = v
+	var ApplicationData ApplicationData
+	var err error
+	var aim *models.Aims
+	if err = json.Unmarshal(c.Ctx.Input.RequestBody, &ApplicationData); err == nil {
+
+		if aim, err = models.GetAimsById(ApplicationData.AimID); err != nil {
+			c.Response(400, nil, errors.New("No such Aim"))
+		}
+
+		var uniqFilename uuid.UUID
+
+		if uniqFilename, err = uuid.NewUUID(); err != nil {
+			c.Response(500, nil, err)
+		}
+		filenameSlice := strings.Split(ApplicationData.FileName, ".")
+		imgFileName := uniqFilename.String() + "." + filenameSlice[len(filenameSlice)-1]
+
+		url := applicationsPath + imgFileName
+
+		if err = ioutil.WriteFile(url, ApplicationData.File, 0644); err != nil {
+			c.Response(400, nil, err)
+		}
+
+		applic := &models.Applications{
+
+			Aim:         aim,
+			UniqId:      uniqFilename.String(),
+			Filename:    ApplicationData.FileName,
+			Url:         url,
+			Description: ApplicationData.Description,
+			Active:      true,
+		}
+
+		if _, err := models.AddApplications(applic); err == nil {
+			c.Response(201, ApplicationData, nil)
 		} else {
-			c.Data["json"] = err.Error()
+			c.Response(400, nil, err)
 		}
 	} else {
-		c.Data["json"] = err.Error()
+		c.Response(400, nil, err)
 	}
-	c.ServeJSON()
+
 }
 
 // GetOne ...
@@ -56,13 +98,13 @@ func (c *ApplicationsController) Post() {
 func (c *ApplicationsController) GetOne() {
 	idStr := c.Ctx.Input.Param(":id")
 	id, _ := strconv.Atoi(idStr)
-	v, err := models.GetApplicationsById(id)
+	application, err := models.GetApplicationsById(id)
 	if err != nil {
-		c.Data["json"] = err.Error()
+		c.Response(400, nil, err)
 	} else {
-		c.Data["json"] = v
+		c.Response(200, application, nil)
 	}
-	c.ServeJSON()
+
 }
 
 // GetAll ...
@@ -110,8 +152,9 @@ func (c *ApplicationsController) GetAll() {
 		for _, cond := range strings.Split(v, ",") {
 			kv := strings.SplitN(cond, ":", 2)
 			if len(kv) != 2 {
-				c.Data["json"] = errors.New("Error: invalid query key/value pair")
-				c.ServeJSON()
+				c.Response(400, nil, errors.New("Error: invalid query key/value pair"))
+				//c.Data["json"] = errors.New("Error: invalid query key/value pair")
+				//c.ServeJSON()
 				return
 			}
 			k, v := kv[0], kv[1]
@@ -119,13 +162,12 @@ func (c *ApplicationsController) GetAll() {
 		}
 	}
 
-	l, err := models.GetAllApplications(query, fields, sortby, order, offset, limit)
+	allApplications, err := models.GetAllApplications(query, fields, sortby, order, offset, limit)
 	if err != nil {
-		c.Data["json"] = err.Error()
+		c.Response(400, nil, err)
 	} else {
-		c.Data["json"] = l
+		c.Response(200, allApplications, nil)
 	}
-	c.ServeJSON()
 }
 
 // Put ...
@@ -137,19 +179,61 @@ func (c *ApplicationsController) GetAll() {
 // @Failure 403 :id is not int
 // @router /:id [put]
 func (c *ApplicationsController) Put() {
+	var err error
+	var id int
+	var aim *models.Aims
+
 	idStr := c.Ctx.Input.Param(":id")
-	id, _ := strconv.Atoi(idStr)
-	v := models.Applications{Id: id}
-	if err := json.Unmarshal(c.Ctx.Input.RequestBody, &v); err == nil {
-		if err := models.UpdateApplicationsById(&v); err == nil {
-			c.Data["json"] = "OK"
-		} else {
-			c.Data["json"] = err.Error()
-		}
-	} else {
-		c.Data["json"] = err.Error()
+	if id, err = strconv.Atoi(idStr); err != nil {
+		c.Response(400, nil, err)
 	}
-	c.ServeJSON()
+	var v *models.Applications
+
+	if v, err = models.GetApplicationsById(id); err != nil {
+		c.Response(400, nil, err)
+	}
+	var appData ApplicationData
+
+	if err = json.Unmarshal(c.Ctx.Input.RequestBody, &appData); err != nil {
+		c.Response(400, nil, err)
+	}
+	if aim, err = models.GetAimsById(appData.AimID); err != nil {
+		c.Response(400, nil, err)
+	}
+	v.Aim = aim
+	v.Description = appData.Description
+
+	if appData.File != nil {
+		log.Info(v.Url)
+		if err = os.Remove(v.Url); err != nil {
+			log.Error(err)
+			c.Response(500, nil, err)
+		}
+
+		var uniqFilename uuid.UUID
+
+		if uniqFilename, err = uuid.NewUUID(); err != nil {
+			c.Response(500, nil, err)
+		}
+		filenameSlice := strings.Split(appData.FileName, ".")
+		imgFileName := uniqFilename.String() + "." + filenameSlice[len(filenameSlice)-1]
+
+		url := applicationsPath + imgFileName
+
+		if err = ioutil.WriteFile(url, appData.File, 0644); err != nil {
+			log.Error(err)
+			c.Response(400, nil, err)
+		}
+		v.Url = url
+		v.Filename = appData.FileName
+		v.UniqId = uniqFilename.String()
+	}
+
+	if err = models.UpdateApplicationsById(v); err != nil {
+		c.Response(500, nil, err)
+	}
+	c.Response(200, v, nil)
+
 }
 
 // Delete ...

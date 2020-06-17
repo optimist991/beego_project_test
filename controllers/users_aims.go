@@ -6,13 +6,16 @@ import (
 	"errors"
 	"strconv"
 	"strings"
-
-	"github.com/astaxie/beego"
 )
 
 // UsersAimsController operations for UsersAims
 type UsersAimsController struct {
-	beego.Controller
+	BaseController
+}
+
+type UserAimsData struct {
+	UserID int `json:"user_id"`
+	AimID  int `json:"aim_id"`
 }
 
 // URLMapping ...
@@ -33,8 +36,24 @@ func (c *UsersAimsController) URLMapping() {
 // @router / [post]
 func (c *UsersAimsController) Post() {
 	var v models.UsersAims
-	if err := json.Unmarshal(c.Ctx.Input.RequestBody, &v); err == nil {
-		if _, err := models.AddUsersAims(&v); err == nil {
+	var err error
+	var user *models.Users
+	var aim *models.Aims
+	if err = json.Unmarshal(c.Ctx.Input.RequestBody, &v); err == nil {
+
+		if user, err = models.GetUsersById(v.User.Id); err != nil {
+			c.Response(400, nil, errors.New("No such User"))
+		}
+		if aim, err = models.GetAimsById(v.Aim.Id); err != nil {
+			c.Response(400, nil, errors.New("No such Aim"))
+		}
+
+		aimUser := &models.UsersAims{
+			User: user,
+			Aim:  aim,
+		}
+
+		if _, err := models.AddUsersAims(aimUser); err == nil {
 			c.Ctx.Output.SetStatus(201)
 			c.Data["json"] = v
 		} else {
